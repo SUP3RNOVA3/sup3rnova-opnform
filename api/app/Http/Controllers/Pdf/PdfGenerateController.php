@@ -20,7 +20,7 @@ class PdfGenerateController extends Controller
         private PdfGeneratorService $generator,
         private PdfCacheService $cache
     ) {
-        $this->middleware('auth')->only(['getTemplateSignedUrl', 'getPreviewSignedUrl']);
+        $this->middleware('auth')->only(['getPreviewSignedUrl']);
     }
 
     /**
@@ -33,10 +33,13 @@ class PdfGenerateController extends Controller
         PdfTemplate $pdfTemplate,
         string $submission_id
     ) {
-        $this->authorize('view', $form);
-
-        // Validate template belongs to form
-        if ($pdfTemplate->form_id !== $form->id) {
+        // This endpoint is called from the public success page. Only expose
+        // the template explicitly enabled for respondent downloads.
+        if (
+            !$form->pdf_download_enabled
+            || (int) $form->pdf_template_id !== (int) $pdfTemplate->id
+            || $pdfTemplate->form_id !== $form->id
+        ) {
             abort(404, 'Template not found.');
         }
 

@@ -293,7 +293,10 @@ Route::group(['middleware' => 'auth.multi'], function () {
                 Route::get(
                     '/{pdfTemplate}/submissions/{submission_id}/signed-url',
                     [PdfGenerateController::class, 'getTemplateSignedUrl']
-                )->name('submission.signed-url');
+                )
+                    ->middleware('throttle:30,1')
+                    ->withoutMiddleware(['auth.multi'])
+                    ->name('submission.signed-url');
 
                 // Get signed URL for preview PDF (admin)
                 Route::get(

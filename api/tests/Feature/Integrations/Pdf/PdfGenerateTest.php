@@ -44,6 +44,10 @@ describe('PDF Template - Signed URL', function () {
         $submission = $form->submissions()->create([
             'data' => ['name' => 'Test User'],
         ]);
+        $form->update([
+            'pdf_download_enabled' => true,
+            'pdf_template_id' => $template->id,
+        ]);
 
         $response = $this->getJson(
             route('open.forms.pdf-templates.submission.signed-url', [
@@ -60,7 +64,46 @@ describe('PDF Template - Signed URL', function () {
         expect($url)->toContain('signature=');
     });
 
-    it('requires authentication to get signed url', function () {
+    it('allows a respondent to get a signed url for the configured template', function () {
+        $user = $this->createProUser();
+        $workspace = $this->createUserWorkspace($user);
+        $form = $this->createForm($user, $workspace);
+
+        $pdfContent = createValidPdfForGeneration();
+        $templatePath = "pdf-templates/{$form->id}/template.pdf";
+        Storage::put($templatePath, $pdfContent);
+
+        $template = PdfTemplate::create([
+            'form_id' => $form->id,
+            'name' => 'Test Template',
+            'filename' => 'template.pdf',
+            'original_filename' => 'Template.pdf',
+            'file_path' => $templatePath,
+            'file_size' => strlen($pdfContent),
+            'page_count' => 1,
+        ]);
+
+        $submission = $form->submissions()->create([
+            'data' => [],
+        ]);
+        $form->update([
+            'pdf_download_enabled' => true,
+            'pdf_template_id' => $template->id,
+        ]);
+
+        $response = $this->getJson(
+            route('open.forms.pdf-templates.submission.signed-url', [
+                'form' => $form,
+                'pdfTemplate' => $template->id,
+                'submission_id' => getEncodedSubmissionId($submission),
+            ])
+        );
+
+        $response->assertSuccessful()
+            ->assertJsonStructure(['url']);
+    });
+
+    it('does not expose a template that is not enabled for respondent download', function () {
         $user = $this->createProUser();
         $workspace = $this->createUserWorkspace($user);
         $form = $this->createForm($user, $workspace);
@@ -91,7 +134,7 @@ describe('PDF Template - Signed URL', function () {
             ])
         );
 
-        $response->assertStatus(401);
+        $response->assertStatus(404);
     });
 
     it('returns 404 for non-existent submission', function () {
