@@ -113,6 +113,26 @@ const {
 // Save template
 const saveTemplate = async () => {
   if (!form.value?.id || pdfStore.saving) return
+
+  const incompleteZone = pdfTemplate.value?.zone_mappings?.find((zone) => {
+    if (zone.static_text !== undefined) {
+      const text = String(zone.static_text || '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .trim()
+      return text.length === 0
+    }
+    if (zone.static_image !== undefined) {
+      return String(zone.static_image || '').trim().length === 0
+    }
+    return false
+  })
+
+  if (incompleteZone) {
+    pdfStore.setSelectedZone(incompleteZone.id)
+    alert.error('Complete or delete the empty text/image zone before saving.')
+    return
+  }
   
   pdfStore.setSaving(true)
   try {
