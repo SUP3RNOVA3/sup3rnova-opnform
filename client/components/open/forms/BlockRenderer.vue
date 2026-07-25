@@ -326,6 +326,7 @@ const boundProps = computed(() => {
     inputProperties.unavailableCountries = field.unavailable_countries ?? []
   } else if (field.type === 'text' && field.secret_input) {
     inputProperties.nativeType = 'password'
+    inputProperties.autocomplete = 'new-password'
   } else if(field.type === 'text' && field.input_mask) {
     inputProperties.mask = field.input_mask
     inputProperties.slotChar = field.slot_char

@@ -9,7 +9,10 @@
       v-model="compVal"
       :disabled="disabled ? true : null"
       :type="nativeType"
-      :autocomplete="autocomplete"
+      :autocomplete="resolvedAutocomplete"
+      :data-lpignore="nativeType === 'password' ? 'true' : null"
+      :data-1p-ignore="nativeType === 'password' ? 'true' : null"
+      :data-form-type="nativeType === 'password' ? 'other' : null"
       :pattern="pattern"
       :style="inputStyle"
       :class="ui.input({ class: props.ui?.slots?.input })"
@@ -21,7 +24,7 @@
       :maxlength="maxCharLimit"
       @change="onChange"
       @keydown.enter="onEnterPress"
-      @focus="onFocus"
+      @focus="onInputFocus"
       @blur="onBlur"
     >
 
@@ -96,14 +99,34 @@ export default {
       return false
     }
 
+    const onInputFocus = (event) => {
+      // Password managers sometimes treat masked tax identifiers as login
+      // credentials. If they changed only the DOM value, restore the actual
+      // form value before the user starts typing.
+      if (props.nativeType === 'password') {
+        const formValue = formInput.compVal.value ?? ''
+        if (event.target.value !== formValue) {
+          event.target.value = formValue
+        }
+      }
+      formInput.onFocus(event)
+    }
+
     return {
       ...formInput,
       onEnterPress,
+      onInputFocus,
       onChange,
       props
     }
   },
   computed: {
+    resolvedAutocomplete() {
+      if (this.nativeType === 'password' && !this.autocomplete) {
+        return 'new-password'
+      }
+      return this.autocomplete
+    },
     charCount() {
       return this.compVal ? this.compVal.length : 0
     },

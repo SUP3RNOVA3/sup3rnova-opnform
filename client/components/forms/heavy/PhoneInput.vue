@@ -116,6 +116,7 @@ const { compVal, resolvedSize, resolvedTheme, inputStyle, inputWrapperProps, ui 
 // Reactive data
 const selectedCountryCode = ref(null)
 const inputVal = ref(null)
+const lastInternalValue = ref(Symbol('initial'))
 
 // Computed properties
 const countries = computed(() => {
@@ -141,7 +142,19 @@ const getCountryBy = (code = 'US', type = 'code') => {
 }
 
 const onInput = (event) => {
-  inputVal.value = event?.target?.value.replace(/[^0-9]/g, '')
+  const nationalNumber = event?.target?.value.replace(/[^0-9]/g, '') ?? ''
+  inputVal.value = nationalNumber
+
+  // Countries in the North American Numbering Plan share +1. Detect the
+  // correct flag only after a complete national number is available, and
+  // never replace what the user typed with an inferred area code.
+  if (selectedCountryCode.value?.dial_code === '+1' && nationalNumber.length === 10) {
+    const phoneObj = parsePhoneNumber(`+1${nationalNumber}`)
+    const detectedCountry = phoneObj?.country ? getCountryBy(phoneObj.country) : null
+    if (detectedCountry && detectedCountry.code !== selectedCountryCode.value.code) {
+      selectedCountryCode.value = detectedCountry
+    }
+  }
 }
 
 const onEnterPress = (event) => {
@@ -199,14 +212,24 @@ watch(inputVal, (val) => {
   if (val && val.startsWith('0')) {
     val = val.substring(1)
   }
+  let nextValue
   if (props.canOnlyCountry) {
-    compVal.value = (val) ? selectedCountryCode.value.code + selectedCountryCode.value.dial_code + val : selectedCountryCode.value.code + selectedCountryCode.value.dial_code
+    nextValue = (val) ? selectedCountryCode.value.code + selectedCountryCode.value.dial_code + val : selectedCountryCode.value.code + selectedCountryCode.value.dial_code
   } else {
-    compVal.value = (val) ? selectedCountryCode.value.code + selectedCountryCode.value.dial_code + val : null
+    nextValue = (val) ? selectedCountryCode.value.code + selectedCountryCode.value.dial_code + val : null
   }
+  lastInternalValue.value = nextValue
+  compVal.value = nextValue
 })
 
-watch(() => compVal.value, () => {
+watch(() => compVal.value, (newValue) => {
+  // The input watcher serializes the local value into compVal. Parsing that
+  // value again fed inferred NANP area codes back into the input (for example
+  // repeated 939 prefixes for Puerto Rico).
+  if (newValue === lastInternalValue.value) {
+    lastInternalValue.value = Symbol('handled')
+    return
+  }
   initState()
 })
 
