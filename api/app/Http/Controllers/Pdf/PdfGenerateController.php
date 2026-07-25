@@ -13,6 +13,7 @@ use App\Service\Forms\SubmissionUrlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class PdfGenerateController extends Controller
 {
@@ -33,12 +34,25 @@ class PdfGenerateController extends Controller
         PdfTemplate $pdfTemplate,
         string $submission_id
     ) {
-        // This endpoint is called from the public success page. Only expose
-        // the template explicitly enabled for respondent downloads.
-        if (
+        if ($pdfTemplate->form_id !== $form->id) {
+            abort(404, 'Template not found.');
+        }
+
+        // The submissions dashboard and the public success page share this
+        // endpoint. An authenticated form owner may generate PDFs without
+        // enabling respondent downloads. Anonymous respondents remain limited
+        // to the one template explicitly enabled on the form.
+        try {
+            $isAuthenticated = auth('api')->check();
+        } catch (JWTException) {
+            $isAuthenticated = false;
+        }
+
+        if ($isAuthenticated) {
+            $this->authorize('update', $form);
+        } elseif (
             !$form->pdf_download_enabled
             || (int) $form->pdf_template_id !== (int) $pdfTemplate->id
-            || $pdfTemplate->form_id !== $form->id
         ) {
             abort(404, 'Template not found.');
         }
