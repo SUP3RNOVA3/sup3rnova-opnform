@@ -163,6 +163,11 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  inviteToken: {
+    type: String,
+    required: false,
+    default: null,
+  },
 })
 
 // Emits
@@ -388,7 +393,12 @@ const signInwithGoogle = () => {
 }
 
 const signInWithAuthKit = () => {
-  oAuth.guestConnect('authkit', true, { intent: 'auth' })
+  oAuth.guestConnect('authkit', true, {
+    intent: 'auth',
+    ...(props.inviteToken
+      ? { invite_token: props.inviteToken }
+      : {}),
+  })
 }
 
 const handleTwoFactorVerifiedAndRedirect = (tokenData) => {

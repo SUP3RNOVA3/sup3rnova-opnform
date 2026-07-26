@@ -24,6 +24,10 @@ it('can register with invite token', function () {
 
     expect($this->workspace->invites()->count())->toBe(1);
     $userInvite = UserInvite::latest()->first();
+    expect($userInvite->getLink())
+        ->toContain('/login?')
+        ->toContain('email=' . urlencode($email))
+        ->toContain('invite_token=' . urlencode($userInvite->token));
     $token = $userInvite->token;
 
     $this->postJson('/logout')

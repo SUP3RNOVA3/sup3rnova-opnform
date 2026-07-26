@@ -54,7 +54,7 @@ class UserInvite extends Model
 
     public function getLink()
     {
-        return front_url('/register?email=' . urlencode($this->email) . '&invite_token=' . urlencode($this->token));
+        return front_url('/login?email=' . urlencode($this->email) . '&invite_token=' . urlencode($this->token));
     }
 
     public function hasExpired()

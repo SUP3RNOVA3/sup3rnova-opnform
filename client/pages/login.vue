@@ -30,7 +30,7 @@
           </p>
         </div>
 
-        <LoginForm />
+        <LoginForm :invite-token="inviteToken" />
       </div>
 
       <p class="mt-8 text-center text-xs text-white/30">
@@ -42,6 +42,12 @@
 
 <script setup>
 import LoginForm from "~/components/pages/auth/components/LoginForm.vue"
+
+const route = useRoute()
+const inviteToken = computed(() => {
+  const value = route.query?.invite_token
+  return typeof value === "string" ? value : null
+})
 
 definePageMeta({
   middleware: "guest",

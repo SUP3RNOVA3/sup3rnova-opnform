@@ -6,6 +6,7 @@ import LoginForm from '~/components/pages/auth/components/LoginForm.vue'
 
 const {
     startLinkSpy,
+    guestConnectSpy,
     completeLinkIfNeededSpy,
     redirectToOidcProviderSpy,
     canAutomaticallyRetryOidcSignInSpy,
@@ -16,6 +17,7 @@ const {
     storeOidcStateVerifierSpy,
 } = vi.hoisted(() => ({
     startLinkSpy: vi.fn(),
+    guestConnectSpy: vi.fn(),
     completeLinkIfNeededSpy: vi.fn(() => Promise.resolve(true)),
     redirectToOidcProviderSpy: vi.fn(),
     canAutomaticallyRetryOidcSignInSpy: vi.fn(() => true),
@@ -53,7 +55,7 @@ vi.mock('~/composables/useAuthFlow', () => ({
 
 vi.mock('~/composables/query/useOAuth', () => ({
     useOAuth: () => ({
-        guestConnect: vi.fn(),
+        guestConnect: guestConnectSpy,
     }),
 }))
 
@@ -161,9 +163,51 @@ describe('OIDC link flow', () => {
     }
 
     beforeEach(() => {
+        guestConnectSpy.mockReset()
         vi.clearAllMocks()
         Object.keys(featureFlagValues).forEach((key) => delete featureFlagValues[key])
         canAutomaticallyRetryOidcSignInSpy.mockReturnValue(true)
+    })
+
+    it('passes a workspace invitation through the forced AuthKit login', async () => {
+        setupGlobals({
+            query: {
+                email: 'invitee@sup3rnova.com',
+                invite_token: 'invite-token-123',
+            },
+        }, {
+            featureFlags: {
+                'services.authkit.auth': true,
+                'services.authkit.forced': true,
+            },
+        })
+
+        const wrapper = mount(LoginForm, {
+            props: {
+                inviteToken: 'invite-token-123',
+            },
+            global: {
+                stubs: {
+                    ForgotPasswordModal: true,
+                    TwoFactorVerificationModal: true,
+                    VForm: {
+                        template: '<form><slot /></form>',
+                    },
+                    UButton: {
+                        props: ['label'],
+                        emits: ['click'],
+                        template: '<button @click="$emit(\'click\', $event)">{{ label }}</button>',
+                    },
+                },
+            },
+        })
+
+        await wrapper.get('button').trigger('click')
+
+        expect(guestConnectSpy).toHaveBeenCalledWith('authkit', true, {
+            intent: 'auth',
+            invite_token: 'invite-token-123',
+        })
     })
 
     afterEach(() => {

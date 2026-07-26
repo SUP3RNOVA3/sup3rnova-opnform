@@ -86,6 +86,19 @@ const isInvited = computed(() => {
   return route.query?.email && route.query?.invite_token
 })
 
+if (useFeatureFlag('services.authkit.forced', false) && isInvited.value) {
+  await navigateTo({
+    name: 'login',
+    query: {
+      email: route.query.email,
+      invite_token: route.query.invite_token,
+    },
+  }, {
+    redirectCode: 302,
+    replace: true,
+  })
+}
+
 const showAppSumoPanel = computed(() => {
   return Boolean(route.query.appsumo_license || route.query.appsumo_error)
 })
