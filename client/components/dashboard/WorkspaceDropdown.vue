@@ -184,7 +184,7 @@ const openSettings = () => {
 const openInviteUserModal = () => {
   isDropdownOpen.value = false
 
-  if (workspace.value && !workspace.value?.features?.includes('workspaces.multiple')) {
+  if (workspace.value && !workspace.value?.features?.includes('invite_user')) {
     openSubscriptionModal({ modal_title: 'Upgrade to invite users to your workspace' })
     return
   }
