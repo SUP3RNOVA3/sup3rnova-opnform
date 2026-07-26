@@ -484,6 +484,11 @@ test("logout clears auth and protected routes redirect to login", async ({ page 
   await expect(page).toHaveURL(/\/login$/, { timeout: 20_000 })
 })
 
+test("corporate root redirects guests to login", async ({ page }) => {
+  await page.goto("/")
+  await expect(page).toHaveURL(/\/login$/, { timeout: 20_000 })
+})
+
 test("classic form creation works end to end", async ({ page }) => {
   await loginUi(page)
 
