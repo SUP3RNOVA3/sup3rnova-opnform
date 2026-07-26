@@ -36,7 +36,11 @@ class OAuthProviderService
                 'provider_user_id' => $providerUserId,
             ],
             [
-                'access_token' => $userData['access_token'],
+                // Identity-only providers such as AuthKit do not expose
+                // reusable third-party OAuth tokens. The legacy production
+                // schema requires non-null token columns, so persist an empty
+                // value rather than a WorkOS session token or null.
+                'access_token' => $userData['access_token'] ?? '',
                 'refresh_token' => $userData['refresh_token'] ?? '',
                 'name' => $userData['name'],
                 'email' => $userData['email'],
