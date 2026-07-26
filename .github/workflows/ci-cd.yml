@@ -450,7 +450,10 @@ jobs:
 
   production-deploy:
     needs: [code_lint, client_checks, sync_check, tests, e2e]
-    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # SUP3RNOVA deploys this fork through its own GHCR + Coolify workflows.
+    # Keep the upstream Vapor/Amplify job available only when explicitly
+    # enabled for an upstream-compatible environment.
+    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.UPSTREAM_CLOUD_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     name: Triggers Deployment (Vapor & Amplify)
 

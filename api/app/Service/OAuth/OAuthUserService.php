@@ -69,8 +69,12 @@ class OAuthUserService
                     'provider_user_id' => $userData['provider_user_id'],
                     'name' => $userData['name'],
                     'email' => $email,
-                    'access_token' => null,
-                    'refresh_token' => null,
+                    // AuthKit establishes application identity, not a reusable
+                    // third-party OAuth integration. Keep the legacy
+                    // non-null token columns empty without persisting the
+                    // WorkOS session tokens.
+                    'access_token' => '',
+                    'refresh_token' => '',
                     'scopes' => [],
                 ]);
 
