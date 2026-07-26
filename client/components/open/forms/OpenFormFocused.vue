@@ -269,9 +269,6 @@ onMounted(() => {
 // Slots/utilities
 const slots = useSlots()
 
-// Branding gating from strategy; defaults to true when not present
-const showBranding = computed(() => props.formManager?.strategy?.value?.display?.showBranding ?? true)
-
 // Focused arrows logic and gating
 const showArrowsSetting = computed(() => (form.value?.settings?.navigation_arrows !== false))
 const canGoPrev = computed(() => state.value.currentPage > 0)

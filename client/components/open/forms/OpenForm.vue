@@ -275,8 +275,6 @@ const getFieldWidthClasses = (width) => {
   return 'col-span-full'
 }
 
-// Branding display control comes from strategy; default to true
-const showBranding = computed(() => props.formManager?.strategy?.value?.display?.showBranding ?? true)
 </script>
 
 <style lang='scss' scoped>
