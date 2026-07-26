@@ -113,3 +113,12 @@ it('fails closed for unknown workspace feature keys', function () {
     expect($this->service->hasFeature($workspace, 'unknown.feature'))->toBeFalse();
     expect($this->service->userHasFeature($user, 'unknown.feature'))->toBeFalse();
 });
+
+it('enables core team invitations and roles without unlocking other licensed features', function () {
+    config()->set('app.self_hosted', true);
+    config()->set('opnform.core_team.enabled', true);
+
+    expect($this->service->selfHostedHasFeature('invite_user'))->toBeTrue();
+    expect($this->service->selfHostedHasFeature('multi_user.roles'))->toBeTrue();
+    expect($this->service->selfHostedHasFeature('workspaces.multiple'))->toBeFalse();
+});

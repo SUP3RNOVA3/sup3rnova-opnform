@@ -39,6 +39,7 @@ class OAuthUserDataService
             'refresh_token' => $socialiteUser->refreshToken,
             'avatar' => $socialiteUser->getAvatar(),
             'scopes' => $socialiteUser->approvedScopes ?? [],
+            'email_verified' => (bool) ($socialiteUser->user['email_verified'] ?? false),
         ]);
     }
 

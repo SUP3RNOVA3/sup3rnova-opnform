@@ -8,6 +8,7 @@ use App\Integrations\OAuth\Drivers\OAuthGoogleDriver;
 use App\Integrations\OAuth\Drivers\OAuthGoogleOneTapDriver;
 use App\Integrations\OAuth\Drivers\OAuthStripeDriver;
 use App\Integrations\OAuth\Drivers\OAuthTelegramDriver;
+use App\Integrations\OAuth\Drivers\OAuthAuthKitDriver;
 use App\Service\OAuth\OAuthFlowOrchestrator;
 
 enum OAuthProviderService: string
@@ -16,6 +17,7 @@ enum OAuthProviderService: string
     case GoogleOneTap = 'google_one_tap';
     case Stripe = 'stripe';
     case Telegram = 'telegram';
+    case AuthKit = 'authkit';
 
     public function getDriver(): OAuthDriver|WidgetOAuthDriver
     {
@@ -24,6 +26,7 @@ enum OAuthProviderService: string
             self::GoogleOneTap => new OAuthGoogleOneTapDriver(),
             self::Stripe =>  new OAuthStripeDriver(),
             self::Telegram => new OAuthTelegramDriver(),
+            self::AuthKit => new OAuthAuthKitDriver(),
         };
     }
 
@@ -34,6 +37,7 @@ enum OAuthProviderService: string
             self::GoogleOneTap => $intent === OAuthFlowOrchestrator::INTENT_AUTH,
             self::Stripe => $intent === OAuthFlowOrchestrator::INTENT_INTEGRATION,
             self::Telegram => $intent === OAuthFlowOrchestrator::INTENT_INTEGRATION,
+            self::AuthKit => $intent === OAuthFlowOrchestrator::INTENT_AUTH,
         };
     }
 

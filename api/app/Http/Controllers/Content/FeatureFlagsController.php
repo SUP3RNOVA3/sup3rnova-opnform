@@ -34,6 +34,10 @@ class FeatureFlagsController extends Controller
                         'auth' => !empty(config('services.google.client_id')) && !empty(config('services.google.client_secret')),
                         'client_id' => config('services.google.client_id'),
                     ],
+                    'authkit' => [
+                        'auth' => $this->isAuthKitAvailable(),
+                        'forced' => config('services.authkit.force_login', false) && $this->isAuthKitAvailable(),
+                    ],
                     'telegram' => [
                         'bot_id' => $this->extractTelegramBotId()
                     ]
@@ -85,6 +89,13 @@ class FeatureFlagsController extends Controller
         return \App\Enterprise\Oidc\Models\IdentityConnection::enabled()
             ->where('type', \App\Enterprise\Oidc\Models\IdentityConnection::TYPE_OIDC)
             ->exists();
+    }
+
+    private function isAuthKitAvailable(): bool
+    {
+        return config('services.authkit.enabled', false)
+            && !empty(config('services.authkit.client_id'))
+            && !empty(config('services.authkit.api_key'));
     }
 
     /**

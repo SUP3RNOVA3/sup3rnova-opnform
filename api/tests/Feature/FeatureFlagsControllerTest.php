@@ -19,6 +19,9 @@ it('returns feature flags', function () {
     Config::set('services.google.client_id', 'google_client_id');
     Config::set('services.google.client_secret', 'google_client_secret');
     Config::set('services.zapier.enabled', true);
+    Config::set('services.authkit.enabled', true);
+    Config::set('services.authkit.client_id', 'client_test');
+    Config::set('services.authkit.api_key', 'sk_test');
 
     // Act
     $response = $this->getJson(route('content.feature-flags'));
@@ -42,6 +45,10 @@ it('returns feature flags', function () {
                 'google' => [
                     'fonts' => true,
                     'auth' => true,
+                ],
+                'authkit' => [
+                    'auth' => true,
+                    'forced' => false,
                 ],
             ],
             'integrations' => [

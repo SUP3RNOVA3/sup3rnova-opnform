@@ -19,4 +19,7 @@ return [
     'webhooks' => [
         'allow_private_urls' => env('WEBHOOKS_ALLOW_PRIVATE_URLS', false),
     ],
+    'core_team' => [
+        'enabled' => env('SELF_HOSTED_CORE_TEAM_ENABLED', false),
+    ],
 ];

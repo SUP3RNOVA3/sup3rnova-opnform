@@ -31,6 +31,13 @@ class PlanAccessService
      */
     public function selfHostedHasFeature(string $feature): bool
     {
+        if (
+            config('opnform.core_team.enabled')
+            && in_array($feature, ['invite_user', 'multi_user.roles'], true)
+        ) {
+            return true;
+        }
+
         if ($this->isLicenseGatedFeature($feature)) {
             return app(LicenseService::class)->hasAppFeature($feature);
         }

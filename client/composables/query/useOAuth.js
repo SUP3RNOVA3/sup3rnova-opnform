@@ -14,6 +14,13 @@ export function useOAuth() {
   const services = computed(() => {
     return [
       {
+        name: 'authkit',
+        title: 'SUP3RNOVA',
+        icon: 'i-lucide-shield-check',
+        enabled: useFeatureFlag('services.authkit.auth', false),
+        auth_type: 'redirect'
+      },
+      {
         name: 'google',
         title: 'Google',
         icon: 'mdi:google',

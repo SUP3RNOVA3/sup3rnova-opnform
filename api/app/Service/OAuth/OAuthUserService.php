@@ -5,9 +5,12 @@ namespace App\Service\OAuth;
 use App\Integrations\OAuth\OAuthProviderService;
 use App\Models\User;
 use App\Models\UserWorkspace;
-use App\Enterprise\Oidc\ExternalUserFactory;
+use App\Models\OAuthProvider;
+use App\Service\License\SelfHostedSeatLimitService;
 use App\Service\WorkspaceInviteService;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * OAuthUserService
@@ -27,7 +30,6 @@ class OAuthUserService
 {
     public function __construct(
         private OAuthContextService $contextService,
-        private ExternalUserFactory $userFactory,
     ) {
     }
 
@@ -57,6 +59,24 @@ class OAuthUserService
                 return $user;
             }
 
+            if (
+                $providerService === OAuthProviderService::AuthKit
+                && ($userData['email_verified'] ?? false)
+            ) {
+                OAuthProvider::create([
+                    'user_id' => $user->id,
+                    'provider' => $providerService->getDatabaseProvider(),
+                    'provider_user_id' => $userData['provider_user_id'],
+                    'name' => $userData['name'],
+                    'email' => $email,
+                    'access_token' => null,
+                    'refresh_token' => null,
+                    'scopes' => [],
+                ]);
+
+                return $user;
+            }
+
             // User exists but doesn't have this OAuth provider linked and no password
             // This prevents account takeover via different OAuth providers with same email
             throw new HttpResponseException(
@@ -69,7 +89,7 @@ class OAuthUserService
 
         // No existing user - create new account
         // Check if registration is allowed in self-hosted mode
-        if (config('app.self_hosted') && app()->environment() !== 'testing') {
+        if (config('app.self_hosted') && empty($inviteToken) && app()->environment() !== 'testing') {
             abort(422, 'User registration is not allowed.');
         }
 
@@ -78,20 +98,27 @@ class OAuthUserService
         // For widget flows: gets from session context
         $utmData = $this->contextService->getUtmData() ?? $this->contextService->getWidgetContext()['utm_data'] ?? null;
 
-        $user = $this->userFactory->createVerifiedExternalUser(
-            name: $userData['name'],
-            email: $email,
-            provider: $providerService->value,
-            providerUserId: $userData['provider_user_id'] ?? null,
-            utmData: $utmData,
-        );
+        app(SelfHostedSeatLimitService::class)->assertCanCreateUser($email);
 
-        // Get workspace and role using WorkspaceInviteService
+        // Validate and consume the invitation before creating the local account.
         $workspaceInviteService = app(WorkspaceInviteService::class);
         [$workspace, $role] = $workspaceInviteService->getWorkspaceAndRole([
             'email' => $email,
-            'invite_token' => $inviteToken
+            'invite_token' => $inviteToken,
         ]);
+
+        $user = User::create([
+            'name' => $userData['name'],
+            'email' => $email,
+            'password' => Hash::make(Str::random(64)),
+            'hear_about_us' => null,
+            'utm_data' => $utmData,
+            'meta' => [
+                'signup_provider' => $providerService->value,
+                'signup_provider_user_id' => $userData['provider_user_id'] ?? null,
+            ],
+        ]);
+        $user->forceFill(['email_verified_at' => now()])->save();
 
         UserWorkspace::create([
             'workspace_id' => $workspace->id,

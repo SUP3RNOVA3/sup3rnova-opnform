@@ -18,6 +18,26 @@
       :form="form"
       @submit.prevent="login"
     >
+      <UButton
+        v-if="authKitAvailable"
+        native-type="button"
+        color="primary"
+        size="lg"
+        class="mb-4"
+        block
+        :disabled="form.busy"
+        icon="i-lucide-shield-check"
+        label="Continue with SUP3RNOVA"
+        @click.prevent="signInWithAuthKit"
+      />
+
+      <div v-if="authKitAvailable && !authKitForced" class="flex items-center gap-3 mb-4">
+        <div class="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
+        <span class="text-xs text-neutral-500">or use your password</span>
+        <div class="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
+      </div>
+
+      <template v-if="!authKitForced">
       <!-- Email -->
       <text-input
         name="email"
@@ -115,6 +135,7 @@
           Sign Up
         </NuxtLink>
       </p>
+      </template>
     </v-form>
 
     <!-- Google One Tap -->
@@ -158,6 +179,8 @@ const { completeLinkIfNeeded } = useOidcLinking()
 // Feature flags
 const oidcAvailable = computed(() => useFeatureFlag('oidc.available', false))
 const oidcForced = computed(() => useFeatureFlag('oidc.forced', false))
+const authKitAvailable = computed(() => useFeatureFlag('services.authkit.auth', false))
+const authKitForced = computed(() => useFeatureFlag('services.authkit.forced', false))
 
 // Reactive data
 const form = useForm({
@@ -362,6 +385,10 @@ const signInwithGoogle = () => {
   } catch (error) {
     showOAuthError(error)
   }
+}
+
+const signInWithAuthKit = () => {
+  oAuth.guestConnect('authkit', true, { intent: 'auth' })
 }
 
 const handleTwoFactorVerifiedAndRedirect = (tokenData) => {

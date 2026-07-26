@@ -77,6 +77,15 @@ return [
         'fonts_api_key' => env('GOOGLE_FONTS_API_KEY'),
     ],
 
+    'authkit' => [
+        'enabled' => env('AUTHKIT_ENABLED', false),
+        'force_login' => env('AUTHKIT_FORCE_LOGIN', false),
+        'client_id' => env('WORKOS_CLIENT_ID'),
+        'api_key' => env('WORKOS_API_KEY'),
+        'redirect' => env('WORKOS_REDIRECT_URL', front_url('/oauth/authkit/callback')),
+        'organization_id' => env('WORKOS_ORGANIZATION_ID'),
+    ],
+
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
     ],

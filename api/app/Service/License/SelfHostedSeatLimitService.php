@@ -146,7 +146,8 @@ class SelfHostedSeatLimitService
 
     private function shouldEnforceLimit(): bool
     {
-        return (bool) config('app.self_hosted');
+        return (bool) config('app.self_hosted')
+            && !config('opnform.core_team.enabled');
     }
 
     private function hasValidLicense(): bool

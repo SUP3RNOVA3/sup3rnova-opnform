@@ -121,7 +121,7 @@ const handleCallback = async () => {
       } else {
         // Handle new user registration
         router.push({ name: "forms-create" })
-        useAlert().success("Success! You're now registered with your Google account! Welcome to OpnForm.")
+        useAlert().success("Success! Your account is ready.")
       }
     } else if (response.provider) {
       // Integration flow - user was already logged in, provider was connected
