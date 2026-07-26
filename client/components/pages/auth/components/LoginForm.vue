@@ -140,7 +140,7 @@
 
     <!-- Google One Tap -->
     <ClientOnly>
-      <GoogleOneTap context="signin" />
+      <GoogleOneTap v-if="!authKitForced" context="signin" />
     </ClientOnly>
   </div>
 </template>
