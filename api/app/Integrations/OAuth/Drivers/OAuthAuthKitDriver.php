@@ -23,7 +23,7 @@ class OAuthAuthKitDriver implements OAuthDriver
             'organization_id' => config('services.authkit.organization_id'),
         ]);
 
-        return 'https://api.workos.com/user_management/authorize?' . http_build_query($parameters);
+        return $this->apiUrl('/user_management/authorize') . '?' . http_build_query($parameters);
     }
 
     public function getUser(): User
@@ -34,7 +34,7 @@ class OAuthAuthKitDriver implements OAuthDriver
         $response = Http::acceptJson()
             ->asJson()
             ->timeout(10)
-            ->post('https://api.workos.com/user_management/authenticate', [
+            ->post($this->apiUrl('/user_management/authenticate'), [
                 'client_id' => config('services.authkit.client_id'),
                 'client_secret' => config('services.authkit.api_key'),
                 'code' => $code,
@@ -84,5 +84,16 @@ class OAuthAuthKitDriver implements OAuthDriver
     public function getScopesForIntent(string $intent): array
     {
         return [];
+    }
+
+    private function apiUrl(string $path): string
+    {
+        $hostname = preg_replace(
+            '~^https?://~i',
+            '',
+            trim((string) config('services.authkit.api_hostname', 'api.workos.com')),
+        );
+
+        return 'https://' . rtrim($hostname, '/') . '/' . ltrim($path, '/');
     }
 }

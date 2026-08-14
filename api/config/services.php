@@ -82,6 +82,7 @@ return [
         'force_login' => env('AUTHKIT_FORCE_LOGIN', false),
         'client_id' => env('WORKOS_CLIENT_ID'),
         'api_key' => env('WORKOS_API_KEY'),
+        'api_hostname' => env('WORKOS_API_HOSTNAME', 'api.workos.com'),
         'redirect' => env('WORKOS_REDIRECT_URL', front_url('/oauth/authkit/callback')),
         'organization_id' => env('WORKOS_ORGANIZATION_ID'),
     ],

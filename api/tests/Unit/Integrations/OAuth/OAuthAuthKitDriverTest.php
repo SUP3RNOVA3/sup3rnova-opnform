@@ -24,6 +24,31 @@ it('builds an AuthKit authorization URL scoped to the configured organization', 
         ]);
 });
 
+it('routes AuthKit requests through the configured authentication API domain', function () {
+    config()->set('services.authkit.client_id', 'client_test');
+    config()->set('services.authkit.api_key', 'sk_test');
+    config()->set('services.authkit.api_hostname', 'https://auth.example.com/');
+    config()->set('services.authkit.redirect', 'https://forms.example.com/oauth/authkit/callback');
+    request()->merge(['code' => 'code_test']);
+
+    Http::fake([
+        'auth.example.com/user_management/authenticate' => Http::response([
+            'user' => [
+                'id' => 'user_test',
+                'email' => 'person@example.com',
+                'email_verified' => true,
+            ],
+        ]),
+    ]);
+
+    $driver = new OAuthAuthKitDriver();
+
+    expect(parse_url($driver->getRedirectUrl(), PHP_URL_HOST))->toBe('auth.example.com');
+    $driver->getUser();
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://auth.example.com/user_management/authenticate');
+});
+
 it('maps a verified AuthKit user without persisting WorkOS session tokens', function () {
     config()->set('services.authkit.client_id', 'client_test');
     config()->set('services.authkit.api_key', 'sk_test');
